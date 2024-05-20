@@ -29,7 +29,7 @@ extension Trie {
         }
         
         let secondElement = word.index(after: word.startIndex)
-        let remainder = Array(word[secondElement..<word.endIndex])
+        let remainder = word[secondElement..<word.endIndex]
         
         for i in 0..<self.children.count {
             var child = self.children[i]
