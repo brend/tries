@@ -1,58 +1,76 @@
-typealias Letter = Character
-typealias Text = [Letter]
-
-class Trie {
-    var value: Letter?
-    var children: [Trie] = []
-    var words: [Text] = []
-    init(value: Letter?) {
-        self.value = value
+struct Trie<Letter> where Letter: Equatable {
+    typealias Word = [Letter]
+    
+    var letter: Letter? = nil
+    var children: [Self] = []
+    var words: [Word] = []
+    
+    init(value: Letter? = nil) {
+        self.letter = value
+    }
+    
+    var isRoot: Bool {
+        letter == nil
     }
 }
 
 extension Trie {
-    static func root() -> Trie {
-        Trie(value: nil)
-    }
-
-    func addChild(value: Letter) -> Trie {
-        let newChild = Trie(value: value)
+    private mutating func addChild(value: Letter) -> Self {
+        let newChild = Self(value: value)
         self.children.append(newChild)
         return newChild
     }
-
-    func insert(word: Text, originalWord: Text) {
-        guard let firstLetter = word.first else { 
-            self.words.append(originalWord)
-            return 
+    
+    mutating func insert<C1, C2>(word: C1, originalWord: C2)
+    where C1: Collection, C1.Element == Letter, C2: Collection, C2.Element == Letter {
+        guard let firstLetter = word.first else {
+            self.words.append(Array(originalWord))
+            return
         }
-        let remainder = Array(word[1..<word.count])
-        let child = self.children.first(where: {$0.value == firstLetter}) ?? self.addChild(value: firstLetter)
-        child.insert(word: remainder, originalWord: originalWord)
+        
+        let secondElement = word.index(after: word.startIndex)
+        let remainder = Array(word[secondElement..<word.endIndex])
+        
+        for i in 0..<self.children.count {
+            var child = self.children[i]
+            if child.letter! == firstLetter {
+                child.insert(word: remainder, originalWord: originalWord)
+                self.children[i] = child
+                return
+            }
+        }
+        
+        var newChild = Self(value: firstLetter)
+        newChild.insert(word: remainder, originalWord: originalWord)
+        self.children.append(newChild)
+    }
+    
+    private func childMatching(_ value: Letter) -> Self? {
+        self.children.first {$0.letter == value}
     }
 
-    func insert(word: Text) {
+    mutating func insert<C>(word: C) where C: Collection, C.Element == Letter {
         self.insert(word: word, originalWord: word)
     }
 }
 
 extension Trie {
-    func dump(_ indentation: String = "", _ increment: String = "  ") -> String {
-        "\(indentation)\(value ?? Letter(" "))  \(words.isEmpty ? "" : "(\(words.map({String($0)}).joined(separator: ", ")))")\n\(children.reduce("", {"\($0)\($1.dump("\(indentation)\(increment)"))"}))"
-    }
-}
-
-extension Trie {
-    func shrink() {
-        for child in self.children {
+    mutating func shrink() {
+        for var child in self.children {
             child.shrink()
         }
-        if self.children.count == 1 && self.words.isEmpty &&
-            self.value != nil, 
-            let onlyChild = self.children.first {
+        if self.children.count == 1 && 
+           self.words.isEmpty &&
+           !self.isRoot,
+           let onlyChild = self.children.first {
             self.children = onlyChild.children
             self.words = onlyChild.words
         }
+    }
+        
+    struct Abbrev {
+        let word: Word
+        let cypher: Word
     }
 
     func computeCyphers() -> [Abbrev] {
@@ -60,9 +78,9 @@ extension Trie {
         self.computeCyphers(abbrevs: &abbrevs)
         return abbrevs
     }
-
-    func computeCyphers(abbrevs: inout [Abbrev], path: Text = []) {
-        let newPath = value == nil ? path : path + [value!]
+    
+    private func computeCyphers(abbrevs: inout [Abbrev], path: Word = []) {
+        let newPath: Word = if let value = letter { [value] } else { [] }
         for word in words {
             abbrevs.append(Abbrev(word: word, cypher: newPath))
         }
@@ -72,7 +90,8 @@ extension Trie {
     }
 }
 
-struct Abbrev {
-    let word: Text
-    let cypher: Text
+extension Trie {
+    func dump(_ indentation: String = "", _ increment: String = "  ") -> String {
+        "\(indentation)\(isRoot ? "" : String(describing: letter!))  \(words.isEmpty ? "" : "(\(words.map({String(describing: $0)}).joined(separator: ", ")))")\n\(children.reduce("", {"\($0)\($1.dump("\(indentation)\(increment)"))"}))"
+    }
 }
