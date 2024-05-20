@@ -18,7 +18,7 @@ extension Trie {
     mutating func insert<C1, C2>(word: C1, originalWord: C2)
     where C1: Collection, C1.Element == Letter, C2: Collection, C2.Element == Letter {
         guard let firstLetter = word.first else {
-            self.words.append(Array(originalWord))
+            words.append(Array(originalWord))
             return
         }
         
@@ -34,21 +34,19 @@ extension Trie {
     }
     
     mutating func insert<C>(word: C) where C: Collection, C.Element == Letter {
-        self.insert(word: word, originalWord: word)
+        insert(word: word, originalWord: word)
     }
 }
 
 extension Trie {
     mutating func shrink() {
-        for var child in self.children {
-            child.shrink()
+        for i in 0..<children.count {
+            children[i].shrink()
         }
-        if self.children.count == 1 && 
-           self.words.isEmpty &&
-           !self.isRoot,
-           let onlyChild = self.children.first {
-            self.children = onlyChild.children
-            self.words = onlyChild.words
+        if children.count == 1 && words.isEmpty && !isRoot {
+            let onlyChild = children[0]
+            children = onlyChild.children
+            words = onlyChild.words
         }
     }
         
@@ -59,12 +57,12 @@ extension Trie {
 
     func computeCyphers() -> [Abbrev] {
         var abbrevs: [Abbrev] = []
-        self.computeCyphers(abbrevs: &abbrevs)
+        computeCyphers(abbrevs: &abbrevs)
         return abbrevs
     }
     
     private func computeCyphers(abbrevs: inout [Abbrev], path: Word = []) {
-        let newPath: Word = if let value = letter { [value] } else { [] }
+        let newPath = letter.map { [$0] } ?? []
         for word in words {
             abbrevs.append(Abbrev(word: word, cypher: newPath))
         }
