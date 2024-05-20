@@ -22,21 +22,15 @@ extension Trie {
             return
         }
         
-        let secondElement = word.index(after: word.startIndex)
-        let remainder = word[secondElement..<word.endIndex]
+        let remainder = word.dropFirst()
         
-        for i in 0..<self.children.count {
-            var child = self.children[i]
-            if child.letter! == firstLetter {
-                child.insert(word: remainder, originalWord: originalWord)
-                self.children[i] = child
-                return
-            }
+        if let index = children.firstIndex(where: {$0.letter == firstLetter}) {
+            children[index].insert(word: remainder, originalWord: originalWord)
+        } else {
+            var newChild = Trie(value: firstLetter)
+            newChild.insert(word: remainder, originalWord: originalWord)
+            children.append(newChild)
         }
-        
-        var newChild = Self(value: firstLetter)
-        newChild.insert(word: remainder, originalWord: originalWord)
-        self.children.append(newChild)
     }
     
     mutating func insert<C>(word: C) where C: Collection, C.Element == Letter {
