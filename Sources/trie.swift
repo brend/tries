@@ -15,12 +15,6 @@ struct Trie<Letter> where Letter: Equatable {
 }
 
 extension Trie {
-    private mutating func addChild(value: Letter) -> Self {
-        let newChild = Self(value: value)
-        self.children.append(newChild)
-        return newChild
-    }
-    
     mutating func insert<C1, C2>(word: C1, originalWord: C2)
     where C1: Collection, C1.Element == Letter, C2: Collection, C2.Element == Letter {
         guard let firstLetter = word.first else {
@@ -45,10 +39,6 @@ extension Trie {
         self.children.append(newChild)
     }
     
-    private func childMatching(_ value: Letter) -> Self? {
-        self.children.first {$0.letter == value}
-    }
-
     mutating func insert<C>(word: C) where C: Collection, C.Element == Letter {
         self.insert(word: word, originalWord: word)
     }
