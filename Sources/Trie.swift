@@ -62,7 +62,7 @@ extension Trie {
     }
     
     private func computeCyphers(abbrevs: inout [Abbrev], path: Word = []) {
-        let newPath = letter.map { [$0] } ?? []
+        let newPath = path + (letter.map { [$0] } ?? [])
         for word in words {
             abbrevs.append(Abbrev(word: word, cypher: newPath))
         }
