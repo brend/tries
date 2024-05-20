@@ -11,14 +11,18 @@ func printLog(_ message: String) {
     print(message)
 }
 
-enum Option {
-    case logging, shrinking, abbreviations
+struct Options: OptionSet {
+    let rawValue: Int
+    static let logging = Options(rawValue: 1 << 0)
+    static let shrinking = Options(rawValue: 1 << 1)
+    static let abbreviating = Options(rawValue: 1 << 2)
+    static let all: Options = [.logging, .shrinking, .abbreviating]
 }
 
 func process(words: [String],
-             options: [Option] = [.logging, .shrinking, .abbreviations],
+             options: Options = .all,
              log: ((_: String) -> ())? = nil) {
-    let log = options.first {$0 == .logging}.map {_ in log ?? printLog} ?? { _ in }
+    let log = options.contains(.logging) ? (log ?? printLog) : { _ in }
     var t = Trie<Character>()
     func logTrie(_ message: String) {
         log("")
@@ -31,12 +35,12 @@ func process(words: [String],
     
     logTrie("Prefix Tree")
     
-    if options.first(where: {$0 == .shrinking}) != nil {
+    if options.contains(.shrinking) {
         t.shrink()
         logTrie("Reduced Tree")
     }
     
-    if options.first(where: {$0 == .abbreviations}) != nil {
+    if options.contains(.abbreviating) {
         let abbrevs = t.computeCyphers()
         for abbr in abbrevs {
             print("\(String(abbr.word)) -> \(String(abbr.cypher))")
